@@ -23,3 +23,7 @@ int Item::getValeur() const {
 int Item::getQuantite() const {
     return quantite;
 }
+
+void Item::setQuantite(int q) {
+    quantite = q;
+}

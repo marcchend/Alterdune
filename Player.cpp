@@ -69,6 +69,46 @@ void Player::ajouterItem(Item i) {
     inventaire[taille] = i;
 }
 
+void Player::afficherInventaire() const {
+    std::cout << "\n  === Inventaire de " << nom << " ===\n";
+    if (inventaire.size() == 0) {
+        std::cout << "  (vide)\n";
+        return;
+    }
+    for (int i = 0; i < (int)inventaire.size(); i++) {
+        std::cout << "  [" << (i + 1) << "] "
+                  << inventaire[i].getNom()
+                  << " - Soigne " << inventaire[i].getValeur() << " HP"
+                  << " (x" << inventaire[i].getQuantite() << ")\n";
+    }
+}
+
+bool Player::utiliserItem(int index) {
+    // Verifier que l'index est valide
+    if (index < 0 || index >= (int)inventaire.size()) {
+        std::cout << "  Item invalide.\n";
+        return false;
+    }
+
+    // Verifier qu'il reste des exemplaires
+    if (inventaire[index].getQuantite() <= 0) {
+        std::cout << "  Plus de " << inventaire[index].getNom() << " disponible !\n";
+        return false;
+    }
+
+    // Appliquer l'effet (soin)
+    int soin = inventaire[index].getValeur();
+    soigner(soin);
+    std::cout << "  Vous utilisez " << inventaire[index].getNom()
+              << " et recuperez " << soin << " HP !\n";
+    std::cout << "  HP : " << hp << "/" << hpMax << "\n";
+
+    // Reduire la quantite de 1
+    inventaire[index].setQuantite(inventaire[index].getQuantite() - 1);
+
+    return true;
+}
+
 Item Player::getItem(int index) const {
     if (index >= 0 && index < (int)inventaire.size()) {
         return inventaire[index];

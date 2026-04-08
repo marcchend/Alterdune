@@ -11,6 +11,7 @@ private:
     int impact;
 
 public:
+    Action() : id(""), texte(""), impact(0) {}  // constructeur par defaut
     Action(std::string i, std::string t, int imp);
     
     std::string getId() const;

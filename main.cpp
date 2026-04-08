@@ -142,7 +142,7 @@ void lireMonsters(std::string chemin, const std::vector<Action>& catalogue, std:
 // COMBAT
 // ===========================================================
 
-bool combat(Player& joueur, Monster monstre) {
+bool combat(Player& joueur, Monster monstre, const std::vector<Action>& actions) {
     std::cout << "\n============================\n";
     std::cout << "  COMBAT : " << joueur.getNom() << " vs " << monstre.getNom() << "\n";
     std::cout << "============================\n";
@@ -176,21 +176,90 @@ bool combat(Player& joueur, Monster monstre) {
             if (!monstre.estVivant()) {
                 std::cout << "  " << monstre.getNom() << " est vaincu !\n";
                 monstre.setTue(true);
+                monstre.setEpargne(false);
                 joueur.ajouterVictoire(true);
                 return true;
             }
             
         } else if (choix == 2) {
-            std::cout << "\n  [PAS ENCORE FAIT] Systeme ACT\n";
-            joueurAgit = false;
+            // ACT : afficher les actions disponibles du monstre
+            std::vector<std::string> acts = monstre.getActionsDispo();
+            std::cout << "\n  Actions disponibles :\n";
+            for (int i = 0; i < (int)acts.size(); i++) {
+                const Action* a = trouverAction(actions, acts[i]);
+                if (a != NULL) {
+                    std::cout << "  [" << (i + 1) << "] " << a->getId();
+                    // On affiche si l'action est positive ou negative pour donner un indice
+                    if (a->getImpact() > 0) {
+                        std::cout << " (+mercy)";
+                    } else {
+                        std::cout << " (-mercy)";
+                    }
+                    std::cout << "\n";
+                }
+            }
+            std::cout << "  Choix : ";
+            int choixAct;
+            std::cin >> choixAct;
+
+            if (choixAct >= 1 && choixAct <= (int)acts.size()) {
+                const Action* a = trouverAction(actions, acts[choixAct - 1]);
+                if (a != NULL) {
+                    // Afficher le texte drole de l'action
+                    std::cout << "\n  " << a->getTexte() << "\n";
+
+                    // Modifier la jauge mercy du monstre
+                    monstre.ajouterMercy(a->getImpact());
+
+                    std::cout << "  Mercy de " << monstre.getNom()
+                              << " : " << monstre.getMercy()
+                              << "/" << monstre.getObjectifMercy() << "\n";
+                }
+            } else {
+                std::cout << "  Choix invalide.\n";
+                joueurAgit = false;
+            }
             
         } else if (choix == 3) {
-            std::cout << "\n  [PAS ENCORE FAIT] Systeme ITEM\n";
-            joueurAgit = false;
+            // ITEM : afficher l'inventaire et utiliser un item
+            joueur.afficherInventaire();
+
+            // Verifier qu'il y a des items
+            if (joueur.getNbItems() == 0) {
+                std::cout << "  Inventaire vide !\n";
+                joueurAgit = false;
+            } else {
+                std::cout << "  Quel item utiliser ? (0 pour annuler) : ";
+                int choixItem;
+                std::cin >> choixItem;
+
+                if (choixItem == 0) {
+                    joueurAgit = false;
+                } else {
+                    // utiliserItem prend un index 0-base, le joueur tape 1-base
+                    bool ok = joueur.utiliserItem(choixItem - 1);
+                    if (!ok) {
+                        joueurAgit = false;
+                    }
+                }
+            }
             
         } else if (choix == 4) {
-            std::cout << "\n  [PAS ENCORE FAIT] Systeme MERCY\n";
-            joueurAgit = false;
+            // MERCY : epargner le monstre si la jauge est pleine
+            if (monstre.mercyEstPlein()) {
+                std::cout << "\n  " << monstre.getNom()
+                          << " accepte d'etre epargne. Combat termine !\n";
+                monstre.setTue(false);
+                monstre.setEpargne(true);
+                joueur.ajouterVictoire(false); // false = pas tue = epargne
+                return true;
+            } else {
+                std::cout << "\n  Mercy insuffisant ("
+                          << monstre.getMercy() << "/"
+                          << monstre.getObjectifMercy()
+                          << "). Utilisez ACT pour augmenter la jauge !\n";
+                joueurAgit = false;
+            }
             
         } else {
             std::cout << "  Choix invalide.\n";
@@ -213,7 +282,7 @@ bool combat(Player& joueur, Monster monstre) {
 // MENU PRINCIPAL
 // ===========================================================
 
-void menuPrincipal(Player& joueur, std::vector<Monster>& monstres, std::vector<Monster>& bestiaire) {
+void menuPrincipal(Player& joueur, std::vector<Monster>& monstres, std::vector<Monster>& bestiaire, const std::vector<Action>& actions) {
     while (true) {
         std::cout << "\n==============================\n";
         std::cout << "      ALTERDUNE - Menu\n";
@@ -229,7 +298,21 @@ void menuPrincipal(Player& joueur, std::vector<Monster>& monstres, std::vector<M
         std::cin >> choix;
         
         if (choix == 1) {
-            std::cout << "\n  [PAS ENCORE FAIT] Bestiaire\n";
+            // BESTIAIRE : afficher tous les monstres vaincus
+            std::cout << "\n  === Bestiaire (" << bestiaire.size() << " monstres) ===\n";
+            if (bestiaire.size() == 0) {
+                std::cout << "  Aucun monstre vaincu pour l'instant.\n";
+            }
+            for (int i = 0; i < (int)bestiaire.size(); i++) {
+                std::cout << "\n  " << (i + 1) << ". " << bestiaire[i].getNom()
+                          << " [" << bestiaire[i].categorieEnTexte() << "]"
+                          << " - HP max : " << bestiaire[i].getHpMax();
+                if (bestiaire[i].getEpargne()) {
+                    std::cout << " - Epargne\n";
+                } else {
+                    std::cout << " - Tue\n";
+                }
+            }
             
         } else if (choix == 2) {
             if (monstres.size() == 0) {
@@ -237,10 +320,11 @@ void menuPrincipal(Player& joueur, std::vector<Monster>& monstres, std::vector<M
                 continue;
             }
             
-            // Prend le premier monstre
-            Monster adversaire = monstres[0];
+            // Choisir un monstre aleatoire dans la liste
+            int index = rand() % (int)monstres.size();
+            Monster adversaire = monstres[index];
             
-            bool gagne = combat(joueur, adversaire);
+            bool gagne = combat(joueur, adversaire, actions);
             if (gagne) {
                 // Ajouter au bestiaire
                 int taille = (int)bestiaire.size();
@@ -257,7 +341,14 @@ void menuPrincipal(Player& joueur, std::vector<Monster>& monstres, std::vector<M
             joueur.afficherStats();
             
         } else if (choix == 4) {
-            std::cout << "\n  [PAS ENCORE FAIT] Systeme d'items\n";
+            // Afficher l'inventaire et proposer d'utiliser un item hors combat
+            joueur.afficherInventaire();
+            std::cout << "  Utiliser un item ? (numero, 0 pour annuler) : ";
+            int choixItem;
+            std::cin >> choixItem;
+            if (choixItem != 0) {
+                joueur.utiliserItem(choixItem - 1);
+            }
             
         } else if (choix == 5) {
             std::cout << "  Au revoir !\n";
@@ -302,13 +393,13 @@ int main() {
     // Message de bienvenue
     std::cout << "\n--- Bienvenue, " << joueur.getNom() << " ---\n";
     joueur.afficher();
-    std::cout << "\n  [INFO] Seul FIGHT fonctionne. ACT/ITEM/MERCY plus tard.\n";
+    joueur.afficherInventaire();
     
     // Bestiaire
     std::vector<Monster> bestiaire;
     
     // Menu principal
-    menuPrincipal(joueur, monstres, bestiaire);
+    menuPrincipal(joueur, monstres, bestiaire, actions);
     
     // Fin de partie
     std::cout << "\n============================\n";

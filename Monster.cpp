@@ -11,6 +11,7 @@ Monster::Monster() {
     mercy = 0;
     objectifMercy = 0;
     tue = false;
+    epargne = false;
 }
 
 Monster::Monster(std::string n, int h, Categorie cat, int objMercy, std::vector<std::string> acts) {
@@ -21,6 +22,7 @@ Monster::Monster(std::string n, int h, Categorie cat, int objMercy, std::vector<
     mercy = 0;
     objectifMercy = objMercy;
     tue = false;
+    epargne = false;
     actionsDispo = acts;
 }
 
@@ -52,6 +54,10 @@ bool Monster::getTue() const {
     return tue;
 }
 
+bool Monster::getEpargne() const {
+    return epargne;
+}
+
 std::vector<std::string> Monster::getActionsDispo() const {
     return actionsDispo;
 }
@@ -76,6 +82,26 @@ bool Monster::estVivant() const {
 
 void Monster::setTue(bool v) {
     tue = v;
+}
+
+void Monster::setEpargne(bool v) {
+    epargne = v;
+}
+
+void Monster::ajouterMercy(int valeur) {
+    mercy = mercy + valeur;
+    // On borne : mercy ne peut pas descendre sous 0
+    if (mercy < 0) {
+        mercy = 0;
+    }
+    // mercy ne peut pas depasser l'objectif
+    if (mercy > objectifMercy) {
+        mercy = objectifMercy;
+    }
+}
+
+bool Monster::mercyEstPlein() const {
+    return mercy >= objectifMercy;
 }
 
 int Monster::attaquer(Player& cible) {

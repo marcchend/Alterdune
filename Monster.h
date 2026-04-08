@@ -21,6 +21,7 @@ private:
     int mercy;
     int objectifMercy;
     bool tue;
+    bool epargne;
     std::vector<std::string> actionsDispo;
 
 public:
@@ -35,6 +36,7 @@ public:
     int getMercy() const;
     int getObjectifMercy() const;
     bool getTue() const;
+    bool getEpargne() const;
     std::vector<std::string> getActionsDispo() const;
     
     // Methodes utilisees
@@ -42,6 +44,11 @@ public:
     void soigner(int points);
     bool estVivant() const;
     void setTue(bool v);
+    void setEpargne(bool v);
+
+    // Systeme Mercy
+    void ajouterMercy(int valeur);   // ajoute (ou retire) des points de mercy
+    bool mercyEstPlein() const;      // retourne true si mercy >= objectifMercy
     
     // Combat
     int attaquer(Player& cible);

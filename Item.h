@@ -16,6 +16,7 @@ public:
     std::string getNom() const;
     int getValeur() const;
     int getQuantite() const;
+    void setQuantite(int q);  // pour reduire la quantite quand on utilise un item
 };
 
 #endif

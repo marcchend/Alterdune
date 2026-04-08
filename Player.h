@@ -36,6 +36,8 @@ public:
     void ajouterItem(Item i);
     Item getItem(int index) const;
     int getNbItems() const;
+    void afficherInventaire() const;  // affiche tous les items avec leur quantite
+    bool utiliserItem(int index);     // utilise un item (soigne, reduit quantite). Retourne false si impossible.
     
     // Utilitaires
     std::string getTypeFin() const;
