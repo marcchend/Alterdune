@@ -8,6 +8,7 @@ Player::Player(std::string n, int h) {
     kills = 0;
     epargnes = 0;
     victoires = 0;
+    // inventaire est vide au depart
 }
 
 std::string Player::getNom() const {
@@ -62,7 +63,21 @@ void Player::ajouterVictoire(bool tue) {
 }
 
 void Player::ajouterItem(Item i) {
-    // Pas utilise - juste pour que le code compile
+    // Ajouter l'item a l'inventaire
+    int taille = (int)inventaire.size();
+    inventaire.resize(taille + 1);
+    inventaire[taille] = i;
+}
+
+Item Player::getItem(int index) const {
+    if (index >= 0 && index < (int)inventaire.size()) {
+        return inventaire[index];
+    }
+    return Item();
+}
+
+int Player::getNbItems() const {
+    return (int)inventaire.size();
 }
 
 std::string Player::getTypeFin() const {

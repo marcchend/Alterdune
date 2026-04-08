@@ -10,6 +10,7 @@ private:
     int quantite;
 
 public:
+    Item();
     Item(std::string n, int v, int q);
     
     std::string getNom() const;

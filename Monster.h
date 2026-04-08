@@ -24,6 +24,7 @@ private:
     std::vector<std::string> actionsDispo;
 
 public:
+    Monster();
     Monster(std::string n, int h, Categorie cat, int objMercy, std::vector<std::string> acts);
     
     // Accesseurs

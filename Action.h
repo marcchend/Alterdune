@@ -19,7 +19,7 @@ public:
 };
 
 // Fonctions pour le catalogue
-std::vector<Action> construireCatalogue();
+void construireCatalogue(std::vector<Action>& catalogue);
 const Action* trouverAction(const std::vector<Action>& catalogue, std::string id);
 
 #endif

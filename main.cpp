@@ -1,10 +1,9 @@
 #include <iostream>
-#include <vector>
-#include <string>
 #include <fstream>
-#include <sstream>
 #include <cstdlib>
 #include <ctime>
+#include <vector>
+#include <string>
 
 #include "Action.h"
 #include "Item.h"
@@ -12,17 +11,40 @@
 #include "Player.h"
 
 // ===========================================================
-// FONCTIONS POUR LIRE LES FICHIERS (simplifiées)
+// FONCTIONS POUR LIRE LES FICHIERS (sans stringstream)
 // ===========================================================
 
+// Convertit un string en entier (sans atoi)
+int stringVersEntier(std::string s) {
+    int resultat = 0;
+    for (int i = 0; i < (int)s.length(); i++) {
+        resultat = resultat * 10 + (s[i] - '0');
+    }
+    return resultat;
+}
+
+// Decoupe une ligne avec un separateur (sans stringstream)
 std::vector<std::string> decouper(std::string ligne, char separateur) {
     std::vector<std::string> morceaux;
-    std::stringstream flux(ligne);
-    std::string morceau;
+    std::string morceau = "";
+    int nbMorceaux = 0;
     
-    while (getline(flux, morceau, separateur)) {
-        morceaux.push_back(morceau);  // plus besoin de enleverEspaces
+    // Parcourir la ligne
+    for (int i = 0; i < (int)ligne.length(); i++) {
+        if (ligne[i] == separateur) {
+            // Agrandir le tableau et ajouter le morceau
+            morceaux.resize(nbMorceaux + 1);
+            morceaux[nbMorceaux] = morceau;
+            nbMorceaux++;
+            morceau = "";
+        } else {
+            morceau = morceau + ligne[i];
+        }
     }
+    
+    // Ajouter le dernier morceau
+    morceaux.resize(nbMorceaux + 1);
+    morceaux[nbMorceaux] = morceau;
     
     return morceaux;
 }
@@ -36,9 +58,9 @@ Categorie texteVersCategorie(std::string texte) {
     exit(1);
 }
 
-std::vector<Item> lireItems(std::string chemin) {
-    std::vector<Item> items;
-    std::ifstream fichier(chemin.c_str());
+void lireItems(std::string chemin, std::vector<Item>& items) {
+    std::ifstream fichier;
+    fichier.open(chemin.c_str());
     
     if (!fichier.is_open()) {
         std::cerr << "ERREUR: Impossible d'ouvrir " << chemin << std::endl;
@@ -46,26 +68,32 @@ std::vector<Item> lireItems(std::string chemin) {
     }
     
     std::string ligne;
-    while (getline(fichier, ligne)) {
-        if (ligne.empty() || ligne[0] == '#') continue;
+    while (true) {
+        std::getline(fichier, ligne);
+        if (fichier.eof()) break;
+        
+        if (ligne.length() == 0) continue;
+        if (ligne[0] == '#') continue;
         
         std::vector<std::string> colonnes = decouper(ligne, ';');
         if (colonnes.size() < 4) continue;
         
         std::string nom = colonnes[0];
-        int valeur = atoi(colonnes[2].c_str());
-        int quantite = atoi(colonnes[3].c_str());
+        int valeur = stringVersEntier(colonnes[2]);
+        int quantite = stringVersEntier(colonnes[3]);
         
-        items.push_back(Item(nom, valeur, quantite));
+        // Ajouter l'item
+        int taille = (int)items.size();
+        items.resize(taille + 1);
+        items[taille] = Item(nom, valeur, quantite);
     }
     
     fichier.close();
-    return items;
 }
 
-std::vector<Monster> lireMonsters(std::string chemin, const std::vector<Action>& catalogue) {
-    std::vector<Monster> monsters;
-    std::ifstream fichier(chemin.c_str());
+void lireMonsters(std::string chemin, const std::vector<Action>& catalogue, std::vector<Monster>& monsters) {
+    std::ifstream fichier;
+    fichier.open(chemin.c_str());
     
     if (!fichier.is_open()) {
         std::cerr << "ERREUR: Impossible d'ouvrir " << chemin << std::endl;
@@ -73,32 +101,41 @@ std::vector<Monster> lireMonsters(std::string chemin, const std::vector<Action>&
     }
     
     std::string ligne;
-    while (getline(fichier, ligne)) {
-        if (ligne.empty() || ligne[0] == '#') continue;
+    while (true) {
+        std::getline(fichier, ligne);
+        if (fichier.eof()) break;
+        
+        if (ligne.length() == 0) continue;
+        if (ligne[0] == '#') continue;
         
         std::vector<std::string> colonnes = decouper(ligne, ';');
         if (colonnes.size() < 8) continue;
         
         Categorie cat = texteVersCategorie(colonnes[0]);
         std::string nom = colonnes[1];
-        int hp = atoi(colonnes[2].c_str());
-        int objectifMercy = atoi(colonnes[5].c_str());
+        int hp = stringVersEntier(colonnes[2]);
+        int objectifMercy = stringVersEntier(colonnes[5]);
         
         std::vector<std::string> actIds;
+        int nbActs = 0;
         for (int i = 6; i < (int)colonnes.size(); i++) {
-            if (colonnes[i] != "-" && !colonnes[i].empty()) {
+            if (colonnes[i] != "-" && colonnes[i].length() > 0) {
                 const Action* a = trouverAction(catalogue, colonnes[i]);
                 if (a != NULL) {
-                    actIds.push_back(colonnes[i]);
+                    actIds.resize(nbActs + 1);
+                    actIds[nbActs] = colonnes[i];
+                    nbActs++;
                 }
             }
         }
         
-        monsters.push_back(Monster(nom, hp, cat, objectifMercy, actIds));
+        // Ajouter le monstre
+        int taille = (int)monsters.size();
+        monsters.resize(taille + 1);
+        monsters[taille] = Monster(nom, hp, cat, objectifMercy, actIds);
     }
     
     fichier.close();
-    return monsters;
 }
 
 // ===========================================================
@@ -117,11 +154,8 @@ bool combat(Player& joueur, Monster monstre) {
         std::cout << "  " << monstre.getNom() << " : " << monstre.getHp() 
                   << "/" << monstre.getHpMax() << " HP\n\n";
         
-        std::cout << "1. Fight\n";
-        std::cout << "2. Act\n";
-        std::cout << "3. Item\n";
-        std::cout << "4. Mercy\n";
-        std::cout << "Choix : ";
+        std::cout << "  [1] FIGHT   [2] ACT   [3] ITEM   [4] MERCY\n";
+        std::cout << "  Choix : ";
         int choix;
         std::cin >> choix;
         
@@ -185,12 +219,12 @@ void menuPrincipal(Player& joueur, std::vector<Monster>& monstres, std::vector<M
         std::cout << "      ALTERDUNE - Menu\n";
         std::cout << "  Victoires : " << joueur.getVictoires() << "/10\n";
         std::cout << "==============================\n";
-        std::cout << "1. Bestiaire\n";
-        std::cout << "2. Combattre\n";
-        std::cout << "3. Stats\n";
-        std::cout << "4. Items\n";
-        std::cout << "5. Quitter\n";
-        std::cout << "Choix : ";
+        std::cout << "  [1] Bestiaire\n";
+        std::cout << "  [2] Combattre\n";
+        std::cout << "  [3] Stats\n";
+        std::cout << "  [4] Items\n";
+        std::cout << "  [5] Quitter\n";
+        std::cout << "  Choix : ";
         int choix;
         std::cin >> choix;
         
@@ -198,7 +232,7 @@ void menuPrincipal(Player& joueur, std::vector<Monster>& monstres, std::vector<M
             std::cout << "\n  [PAS ENCORE FAIT] Bestiaire\n";
             
         } else if (choix == 2) {
-            if (monstres.empty()) {
+            if (monstres.size() == 0) {
                 std::cout << "  Aucun monstre disponible.\n";
                 continue;
             }
@@ -208,7 +242,11 @@ void menuPrincipal(Player& joueur, std::vector<Monster>& monstres, std::vector<M
             
             bool gagne = combat(joueur, adversaire);
             if (gagne) {
-                bestiaire.push_back(adversaire);
+                // Ajouter au bestiaire
+                int taille = (int)bestiaire.size();
+                bestiaire.resize(taille + 1);
+                bestiaire[taille] = adversaire;
+                
                 if (joueur.getVictoires() >= 10) break;
             } else {
                 std::cout << "  Game Over.\n";
@@ -237,7 +275,8 @@ int main() {
     srand(time(NULL));
     
     // Construit le catalogue d'actions
-    std::vector<Action> actions = construireCatalogue();
+    std::vector<Action> actions;
+    construireCatalogue(actions);
     
     // Nom du joueur
     std::string nomJoueur;
@@ -246,13 +285,16 @@ int main() {
     std::cin >> nomJoueur;
     
     // Charge les fichiers
-    std::vector<Item> items = lireItems("items.csv");
-    std::vector<Monster> monstres = lireMonsters("monsters.csv", actions);
+    std::vector<Item> items;
+    lireItems("items.csv", items);
+    
+    std::vector<Monster> monstres;
+    lireMonsters("monsters.csv", actions, monstres);
     
     // Cree le joueur
     Player joueur(nomJoueur, 100);
     
-    // Ajoute les items (non utilise mais ca compile)
+    // Ajoute les items
     for (int i = 0; i < (int)items.size(); i++) {
         joueur.ajouterItem(items[i]);
     }

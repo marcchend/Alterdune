@@ -3,6 +3,16 @@
 #include <iostream>
 #include <cstdlib>
 
+Monster::Monster() {
+    nom = "";
+    hp = 0;
+    hpMax = 0;
+    categorie = NORMAL;
+    mercy = 0;
+    objectifMercy = 0;
+    tue = false;
+}
+
 Monster::Monster(std::string n, int h, Categorie cat, int objMercy, std::vector<std::string> acts) {
     nom = n;
     hp = h;

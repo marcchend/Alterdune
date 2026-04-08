@@ -13,7 +13,7 @@ private:
     int kills;
     int epargnes;
     int victoires;
-    std::vector<Item> inventaire;  // Declare mais pas utilise
+    std::vector<Item> inventaire;
 
 public:
     Player(std::string n, int h);
@@ -32,8 +32,10 @@ public:
     bool estVivant() const;
     void ajouterVictoire(bool tue);
     
-    // Pour l'inventaire (non utilise mais garde pour la compatibilite)
+    // Pour l'inventaire
     void ajouterItem(Item i);
+    Item getItem(int index) const;
+    int getNbItems() const;
     
     // Utilitaires
     std::string getTypeFin() const;

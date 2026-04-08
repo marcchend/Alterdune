@@ -1,5 +1,11 @@
 #include "Item.h"
 
+Item::Item() {
+    nom = "";
+    valeur = 0;
+    quantite = 0;
+}
+
 Item::Item(std::string n, int v, int q) {
     nom = n;
     valeur = v;
