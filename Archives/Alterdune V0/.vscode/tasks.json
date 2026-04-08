@@ -1,0 +1,39 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Compiler ALTERDUNE",
+      "type": "shell",
+      "command": "g++",
+      "args": [
+        "-std=c++17",
+        "*.cpp",
+        "-o",
+        "alterdune"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": [
+        "$gcc"
+      ]
+    },
+    {
+      "label": "Exécuter ALTERDUNE",
+      "type": "shell",
+      "command": "./alterdune",
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "focus": true
+      },
+      "dependsOn": "Compiler ALTERDUNE"
+    }
+  ]
+}
