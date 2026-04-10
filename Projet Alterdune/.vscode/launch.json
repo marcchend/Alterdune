@@ -1,0 +1,18 @@
+{
+  "version": "0.2.1",
+  "configurations": [
+    {
+      "name": "Exécuter ALTERDUNE",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/alterdune",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "lldb",
+      "preLaunchTask": "Compiler ALTERDUNE"
+    }
+  ]
+}
